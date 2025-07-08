@@ -1,0 +1,105 @@
+.ManageReviews {
+    padding: 2.5rem 2rem;
+    max-width: 1200px;
+    margin: 3rem auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.ManageReviews h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.ManageReviews table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+    background-color: #fefefe;
+}
+
+.ManageReviews th,
+.ManageReviews td {
+    padding: 16px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.ManageReviews th {
+    background-color: #f4f6f8;
+    color: #34495e;
+    font-weight: bold;
+}
+
+.ManageReviews tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.ManageReviews tr:hover {
+    background-color: #f1f5f9;
+    transition: background-color 0.2s;
+}
+
+/* Botón eliminar */
+.ManageReviews .delete-review {
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s ease;
+}
+
+.ManageReviews .delete-review:hover {
+    background-color: #c0392b;
+}
+
+/* Calificación con estrellas */
+.rating {
+    color: #f1c40f;
+    display: flex;
+    gap: 2px;
+}
+
+.star-icon {
+    font-size: 1.1rem;
+}
+
+/* Mensajes */
+.loading,
+.no-data {
+    text-align: center;
+    color: #777;
+    font-size: 1.1rem;
+    margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ManageReviews {
+        padding: 1.5rem 1rem;
+    }
+
+    .ManageReviews h2 {
+        font-size: 1.5rem;
+    }
+
+    .ManageReviews table {
+        font-size: 0.9rem;
+    }
+}

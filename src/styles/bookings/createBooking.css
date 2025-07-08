@@ -1,0 +1,117 @@
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+h2 {
+  font-size: 24px;
+  color: #323d45;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  background-color: #f7f7f7;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 20px;
+}
+
+label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+  color: #323d45;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="tel"]:hover,
+select:hover {
+  border-color: #bbb;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+select:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+button {
+  padding: 12px 18px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+button[type="submit"] {
+  background-color: #28a745;
+  color: white;
+}
+
+button[type="submit"]:hover {
+  background-color: #218838;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button.secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+button.secondary:hover {
+  background-color: #5a6268;
+}
+
+button i {
+  margin-right: 8px;
+}
+
+.dni-field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dni-field input {
+  flex-grow: 1;
+}
+
+/* Ajustes para responsividad */
+@media (max-width: 767px) {
+  .container {
+    width: 90%;
+    padding: 20px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+}

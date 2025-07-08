@@ -1,0 +1,112 @@
+.CreateTour {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 20px;
+    /* added padding */
+}
+
+.CreateTour form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    /* makes the form responsive */
+    gap: 30px;
+    /* increased gap */
+    max-width: 80%;
+    /* limit the width for larger screens */
+    margin: auto;
+    /* center form in the available space */
+}
+
+.CreateTour label {
+    display: block;
+    /* changed from flex to block */
+    margin-top: 10px;
+    color: #333;
+    /* darker label color for better readability */
+    font-weight: 600;
+    /* make labels bold */
+}
+
+.CreateTour input[type="text"],
+.CreateTour input[type="number"],
+.CreateTour textarea,
+.CreateTour input[type="file"],
+.CreateTour input[type="checkbox"] {
+    width: calc(100% - 20px);
+    /* subtract padding */
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    /* lighter border */
+    border-radius: 5px;
+    font-size: 16px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+    /* subtle inset shadow for depth */
+}
+
+.CreateTour input[type="submit"],
+.CreateTour button.back {
+    padding: 15px 30px;
+    /* more padding for a larger button */
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    /* bolder font for button text */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* drop shadow for buttons */
+    transition: all 0.3s ease;
+    /* transition for all properties */
+}
+
+.CreateTour input[type="submit"] {
+    background-color: #5cb85c;
+    /* softer green */
+}
+
+.CreateTour input[type="submit"]:hover,
+.CreateTour input[type="submit"]:focus {
+    background-color: #4cae4c;
+    /* slightly darker green on hover/focus */
+    transform: translateY(-2px);
+    /* lift button slightly */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    /* larger shadow on lift */
+}
+
+.back {
+    background-color: #d9534f;
+    /* softer red */
+}
+
+.back:hover,
+.back:focus {
+    background-color: #c9302c;
+    /* darker red on hover/focus */
+    transform: translateY(-2px);
+    /* consistent with submit button */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.image-previews img {
+    width: 90px;
+    /* keep as is */
+    height: 90px;
+    /* keep as is */
+    border-radius: 5px;
+    /* keep as is */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* softer shadow */
+}
+
+.CreateTour input:focus,
+.CreateTour textarea:focus {
+    border-color: #5cb85c;
+    /* change to match button color */
+    box-shadow: 0 0 8px rgba(92, 184, 92, 0.6);
+    /* more pronounced focus glow */
+}

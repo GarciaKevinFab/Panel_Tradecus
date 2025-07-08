@@ -1,0 +1,133 @@
+.tour-detail-container {
+    padding: 2.5rem;
+    background: #f9fafc;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+    margin: 2rem auto;
+    max-width: 1100px;
+    animation: fadeIn 0.4s ease-in;
+}
+
+.tour-title {
+    font-size: 2.5rem;
+    text-align: center;
+    color: #333;
+    margin-bottom: 1rem;
+    font-weight: 800;
+}
+
+.tour-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.tour-info {
+    flex: 1 1 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tour-detail-info-item {
+    background-color: #fff;
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    border-left: 5px solid #625aff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.tour-detail-info-item:hover {
+    transform: translateY(-3px);
+}
+
+.label {
+    font-weight: 700;
+    color: #444;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.value {
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.tour-image-gallery {
+    flex: 1 1 600px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.image-wrapper {
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.tour-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.tour-image:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    background-color: #625aff;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+    margin: 0 auto;
+}
+
+.back-button:hover {
+    background-color: #5042f5;
+}
+
+.loader,
+.error-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    padding: 2rem;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .tour-content {
+        flex-direction: column;
+    }
+
+    .tour-title {
+        font-size: 2rem;
+    }
+
+    .back-button {
+        font-size: 0.95rem;
+        padding: 0.5rem 1.25rem;
+    }
+}

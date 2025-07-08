@@ -1,0 +1,53 @@
+.contact-detail-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    /* Fondo más claro para mayor contraste */
+    border: 1px solid #ddd;
+    /* Borde sutil */
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    color: #333;
+}
+
+.contact-detail-container h2 {
+    color: #004085;
+    /* Color más oscuro para mejor legibilidad */
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.loading,
+.not-found {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    /* Altura reducida */
+    font-size: 1.25rem;
+    color: #888;
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    margin-top: 1.5rem;
+    background-color: #007bff;
+    /* Botón principal azul */
+    color: white;
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #0056b3;
+}
+
+.back-button svg {
+    margin-right: 0.5rem;
+}

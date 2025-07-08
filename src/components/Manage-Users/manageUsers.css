@@ -1,0 +1,124 @@
+.ManageUsers {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 2rem auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.05);
+}
+
+.ManageUsers h2 {
+    color: #2c3e50;
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+th,
+td {
+    padding: 14px 20px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    background-color: #f6f9fc;
+    color: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+
+tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+tr:hover {
+    background-color: #f1f1f1;
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+}
+
+.edit-btn {
+    background-color: #f1c40f;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+}
+
+.add-btn {
+    background-color: #2ecc71;
+    padding: 12px 20px;
+    font-size: 1rem;
+}
+
+.btn:hover {
+    opacity: 0.85;
+}
+
+.btn-wrapper {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.loading,
+.no-data {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+    padding: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    th,
+    td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .add-btn {
+        width: 100%;
+    }
+
+    .actions {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

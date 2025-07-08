@@ -1,0 +1,54 @@
+.CreateUser {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.user-form {
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-field {
+    margin-bottom: 10px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.input,
+select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.btn-create,
+.btn-back {
+    padding: 8px 20px;
+    margin-top: 10px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.btn-create:hover,
+.btn-back:hover {
+    background-color: #0056b3;
+}
+
+.btn-back {
+    background-color: #dc3545;
+}
+
+.btn-back:hover {
+    background-color: #c82333;
+}

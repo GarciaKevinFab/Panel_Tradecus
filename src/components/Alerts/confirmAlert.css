@@ -1,0 +1,22 @@
+.react-confirm-alert-overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  /* Overlay semi-transparente */
+}
+
+.react-confirm-alert-body {
+  width: auto;
+  /* Ajusta al tamaño que desees */
+  height: auto;
+  /* Ajusta al tamaño que desees */
+  background: #fff;
+  /* Fondo blanco */
+  border-radius: 10px;
+  /* Bordes redondeados */
+  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+  /* Sombra para dar un efecto 3D */
+  padding: 20px;
+  /* Espacio alrededor del contenido */
+}

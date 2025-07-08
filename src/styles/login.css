@@ -1,0 +1,67 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(45deg, #f5ebb3, #f1e9a0);
+    /* Asegúrate de usar la fuente que mejor se ajuste a tu diseño */
+}
+
+.login-box {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    width: 350px;
+    /* Ajusta según necesidades de diseño */
+}
+
+h1 {
+    margin-bottom: 30px;
+    color: #333;
+    font-size: 28px;
+}
+
+.login-button {
+    padding: 15px 25px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #72a4f5;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.3s, transform 0.3s;
+    text-transform: none;
+}
+
+.login-button:hover {
+    background-color: #357ae8;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.login-button:active {
+    background-color: #2a65ca;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.login-button:focus {
+    outline: none;
+    border: 2px solid #e5e5e5;
+    /* Añade un borde sutil para indicar foco */
+}
+
+.google-icon {
+    width: 30px;
+    /* Ajusta el tamaño del ícono si es necesario */
+    height: 30px;
+    /* Asegúrate de que el ícono se vea balanceado con el texto */
+    margin-right: 10px;
+}

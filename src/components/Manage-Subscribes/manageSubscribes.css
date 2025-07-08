@@ -1,0 +1,75 @@
+.ManageSubscribes {
+    padding: 2.5rem 2rem;
+    max-width: 900px;
+    margin: 3rem auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+}
+
+.ManageSubscribes h2 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.9rem;
+    font-weight: 700;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.ManageSubscribes table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
+    background-color: #fefefe;
+}
+
+.ManageSubscribes th,
+.ManageSubscribes td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 0.95rem;
+}
+
+.ManageSubscribes th {
+    background-color: #f4f6f8;
+    color: #34495e;
+    font-weight: bold;
+}
+
+.ManageSubscribes tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.ManageSubscribes tr:hover {
+    background-color: #f1f5f9;
+    transition: background-color 0.2s ease;
+}
+
+/* Mensajes */
+.loading,
+.no-data {
+    text-align: center;
+    color: #777;
+    font-size: 1.1rem;
+    margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ManageSubscribes {
+        padding: 1.5rem 1rem;
+    }
+
+    .ManageSubscribes h2 {
+        font-size: 1.5rem;
+    }
+
+    .ManageSubscribes table {
+        font-size: 0.9rem;
+    }
+}
