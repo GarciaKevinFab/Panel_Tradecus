@@ -18,7 +18,12 @@ const ManageUsers = () => {
                     axios.get(`${BASE_URL}/users`),
                     axios.get(`${BASE_URL}/usermobile`),
                 ]);
-                const allUsers = [...usersRes.data.data, ...userMobileRes.data.data];
+
+                // Etiqueta el origen de cada usuario
+                const usersWithSource = usersRes.data.data.map(user => ({ ...user, source: 'users' }));
+                const userMobilesWithSource = userMobileRes.data.data.map(user => ({ ...user, source: 'mobile' }));
+
+                const allUsers = [...usersWithSource, ...userMobilesWithSource];
                 setUsers(allUsers);
             } catch (error) {
                 toast.error("Error al obtener los usuarios");
@@ -26,18 +31,24 @@ const ManageUsers = () => {
                 setLoading(false);
             }
         };
+
         fetchUsers();
     }, []);
 
-    const handleDelete = async (id) => {
+
+    const handleDelete = async (id, source) => {
         try {
-            await axios.delete(`${BASE_URL}/users/${id}`);
+            const route = source === 'mobile' ? 'usermobile' : 'users';
+
+            await axios.delete(`${BASE_URL}/${route}/${id}`);
+
             toast.success('Usuario eliminado exitosamente!');
             setUsers(prev => prev.filter(user => user._id !== id));
         } catch (error) {
             toast.error('Ocurrió un error al eliminar el usuario');
         }
     };
+
 
     return (
         <div className="ManageUsers">
@@ -66,9 +77,13 @@ const ManageUsers = () => {
                                         <Link to={`/edit_user/${user._id}`} className="btn edit-btn">
                                             <FaEdit /> Editar
                                         </Link>
-                                        <button onClick={() => handleDelete(user._id)} className="btn delete-btn">
+                                        <button
+                                            onClick={() => handleDelete(user._id, user.source)}
+                                            className="btn delete-btn"
+                                        >
                                             <FaTrashAlt /> Eliminar
                                         </button>
+
                                     </td>
                                 </tr>
                             ))}
