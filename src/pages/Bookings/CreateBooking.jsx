@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Form, FormGroup, Button } from "reactstrap";
 import { FaArrowLeft, FaSave } from "react-icons/fa";
-import DniField from "../../components/DNI/DniField";
+import IdentityField from "../../components/Identity/IdentityField";
 import { BASE_URL } from "../../utils/config";
 import { AuthContext } from "../../context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,6 +27,7 @@ const CreateBooking = () => {
   });
   const [dni, setDni] = useState(new Array(1).fill(""));
   const [userData, setUserData] = useState(new Array(1).fill({}));
+  const [documentTypes, setDocumentTypes] = useState(new Array(1).fill("dni"));
 
   const handleBack = () => {
     navigate("/manage_bookings");
@@ -61,7 +62,9 @@ const CreateBooking = () => {
   useEffect(() => {
     setDni(new Array(booking.guestSize).fill(""));
     setUserData(new Array(booking.guestSize).fill({}));
+    setDocumentTypes(new Array(booking.guestSize).fill("dni"));
   }, [booking.guestSize]);
+
 
   const getMaxGuests = () => {
     return tourType === "private" ? 2 : 25;
@@ -91,16 +94,22 @@ const CreateBooking = () => {
     }
   };
 
+  const isValidLength = (doc, type) =>
+    (type === "dni" && doc.length === 8) ||
+    (type === "carnet" && doc.length === 9);
+
+  const allDocumentsValid = dni.every((d, i) => d && isValidLength(d, documentTypes[i]));
+  const allUserDataValid = userData.every(d => d?.nombres && d?.apellidoPaterno && d?.apellidoMaterno);
+  const isBookingDataValid =
+    allDocumentsValid &&
+    allUserDataValid &&
+    /^\d{9}$/.test(booking.phone);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (
-      (tourType === "private" && booking.guestSize > 2) ||
-      (tourType === "corporate" && booking.guestSize > 25)
-    ) {
-      toast.error(
-        "Número de invitados excede el límite para el tipo de tour seleccionado."
-      );
+    if (!isBookingDataValid) {
+      toast.error("Por favor, completa correctamente los datos de todos los participantes.");
       return;
     }
 
@@ -124,6 +133,7 @@ const CreateBooking = () => {
         }));
         setUserData(new Array(1).fill({}));
         setDni(new Array(1).fill(""));
+        setDocumentTypes(new Array(1).fill("dni"));
         toast.success("Reserva creada con éxito.");
         navigate('/manage_bookings');
       })
@@ -188,15 +198,18 @@ const CreateBooking = () => {
         <FormGroup>
           <label>Registre a los participantes del Tour:</label>
           {Array.from({ length: booking.guestSize }, (_, i) => (
-            <DniField
+            <IdentityField
               key={i}
               index={i}
               dni={dni}
               setDni={setDni}
               userData={userData}
               setUserData={setUserData}
+              documentTypes={documentTypes}
+              setDocumentTypes={setDocumentTypes}
             />
           ))}
+
         </FormGroup>
         <Button onClick={handleBack} className="secondary">
           <FaArrowLeft /> Regresar

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Modal from 'react-modal';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
@@ -6,13 +6,15 @@ import axios from 'axios';
 import { BASE_URL } from '../../utils/config';
 import { toast } from 'react-toastify';
 import './customModal.css';
-import { MdClose, MdEvent, MdDelete } from 'react-icons/md';
+import { MdClose, MdEvent, MdDelete, MdDownload } from 'react-icons/md';
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle';
 
 Modal.setAppElement('#root');
 
 const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
   const [bookingInfo, setBookingInfo] = useState({});
   const navigate = useNavigate();
+  const pdfRef = useRef(); // 📄 Referencia para exportar como PDF
 
   useEffect(() => {
     if (booking) {
@@ -22,7 +24,7 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
 
   const handleReschedule = () => {
     navigate(`/reschedule_booking`, { state: { booking: bookingInfo } });
-    onRequestClose(); // Close the modal after the action
+    onRequestClose();
   };
 
   const handleDelete = async () => {
@@ -39,6 +41,19 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
     }
   };
 
+  // 🧾 Descargar nota de pedido
+  const handleDownloadPDF = () => {
+    const element = pdfRef.current;
+    const opt = {
+      margin: 0.5,
+      filename: `NotaPedido_${bookingInfo._id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().from(element).set(opt).save();
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -53,23 +68,45 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
           <MdClose />
         </button>
       </div>
-      <div className="CustomModal-content">
-        <p>Email del Usuario: {bookingInfo.userEmail}</p>
-        <p>Nombre del Tour: {bookingInfo.tourName}</p>
-        <p>Tipo de Tour: {bookingInfo.tourType}</p>
-        <p>Número de Invitados: {bookingInfo.guestSize}</p>
-        <p>Teléfono: {bookingInfo.phone}</p>
-        <p>Fecha de Reserva: {bookingInfo.bookAt && moment(bookingInfo.bookAt).format('LLL')}</p>
-        <h3>Detalles de los Invitados:</h3>
-        {bookingInfo.userData && bookingInfo.userData.map((user, index) => (
-          <div key={index}>
-            <p>Nombre: {user.nombres}</p>
-            <p>Apellido Paterno: {user.apellidoPaterno}</p>
-            <p>Apellido Materno: {user.apellidoMaterno}</p>
+
+      <div className="CustomModal-content" ref={pdfRef}>
+        <div className="proforma-header">
+          <h3>🧾 NOTA DE PEDIDO</h3>
+          <p><strong>Fecha:</strong> {moment(bookingInfo.bookAt).format('LL')}</p>
+        </div>
+
+        <div className="proforma-section">
+          <h4>📍 Detalles del Tour</h4>
+          <p><strong>Nombre del Tour:</strong> {bookingInfo.tourName}</p>
+          <p><strong>Tipo de Tour:</strong> {bookingInfo.tourType}</p>
+          <p><strong>Número de Invitados:</strong> {bookingInfo.guestSize}</p>
+          <p><strong>Fecha de Reserva:</strong> {moment(bookingInfo.bookAt).format('LLL')}</p>
+        </div>
+
+        <div className="proforma-section">
+          <h4>👤 Información del Usuario</h4>
+          <p><strong>Email:</strong> {bookingInfo.userEmail}</p>
+          <p><strong>Teléfono:</strong> {bookingInfo.phone}</p>
+        </div>
+
+        {bookingInfo.userData && (
+          <div className="proforma-section">
+            <h4>👥 Datos de los Invitados</h4>
+            {bookingInfo.userData.map((user, index) => (
+              <div key={index} className="guest-entry">
+                <p><strong>Nombre:</strong> {user.nombres}</p>
+                <p><strong>Ap. Paterno:</strong> {user.apellidoPaterno}</p>
+                <p><strong>Ap. Materno:</strong> {user.apellidoMaterno}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
+
       <div className="CustomModal-buttons">
+        <button className="CustomModal-button" onClick={handleDownloadPDF}>
+          <MdDownload /> Descargar Nota
+        </button>
         <button className="CustomModal-button CustomModal-button--reschedule" onClick={handleReschedule}>
           <MdEvent /> Reprogramar
         </button>
