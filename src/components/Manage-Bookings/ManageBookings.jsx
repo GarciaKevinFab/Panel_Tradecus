@@ -32,10 +32,12 @@ const ManageBookings = () => {
       const token = localStorage.getItem("accessToken");
       const res = await axios.get(`${BASE_URL}/booking`, {
         headers: { Authorization: `Bearer ${token}` }
-      }); const events = res.data.data.map(booking => ({
+      });
+      // Suma 12 horas para que nunca se desplace al día anterior en Perú
+      const events = res.data.data.map(booking => ({
         ...booking,
-        start: moment.utc(booking.bookAt).add(12, 'hours').toDate(),
-        end: moment.utc(booking.bookAt).add(12, 'hours').toDate(),
+        start: moment.utc(booking.bookAt).set({ hour: 12, minute: 0, second: 0, millisecond: 0 }).toDate(),
+        end: moment.utc(booking.bookAt).set({ hour: 12, minute: 0, second: 0, millisecond: 0 }).toDate(),
         title: `${booking.tourName} - ${booking.guestSize} guests`
       }));
       setBookings(events);
@@ -57,8 +59,10 @@ const ManageBookings = () => {
     setModalIsOpen(false);
   };
 
+  // ¡Aquí la magia!: fuerza la hora al mediodía antes de navegar
   const handleSelectSlot = (slotInfo) => {
-    navigate(`/create_booking?date=${slotInfo.start.toISOString()}`);
+    const dateSelected = moment(slotInfo.start).set({ hour: 12, minute: 0, second: 0, millisecond: 0 });
+    navigate(`/create_booking?date=${dateSelected.toISOString()}`);
   };
 
   const eventStyleGetter = () => ({
