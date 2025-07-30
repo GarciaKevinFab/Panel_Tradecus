@@ -34,8 +34,8 @@ const ManageBookings = () => {
         headers: { Authorization: `Bearer ${token}` }
       }); const events = res.data.data.map(booking => ({
         ...booking,
-        start: moment.utc(booking.bookAt).local().toDate(),
-        end: moment.utc(booking.bookAt).local().toDate(),
+        start: moment.utc(booking.bookAt).add(12, 'hours').toDate(),
+        end: moment.utc(booking.bookAt).add(12, 'hours').toDate(),
         title: `${booking.tourName} - ${booking.guestSize} guests`
       }));
       setBookings(events);
