@@ -15,6 +15,16 @@ import { saveAs } from 'file-saver';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#00c49f'];
 
 const Dashboard = () => {
+  // GUARDA el token apenas llegues del login Google (token viene en la URL como query param)
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const token = url.searchParams.get("token");
+    if (token) {
+      localStorage.setItem("accessToken", token); // O usa "token" si prefieres, pero sé consistente en todo el proyecto
+      window.history.replaceState({}, document.title, "/dashboard");
+    }
+  }, []);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [bookingStats, setBookingStats] = useState([]);
   const [reviewStats, setReviewStats] = useState([]);
@@ -28,6 +38,10 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // =============== TOKEN UNIVERSAL PARA TODOS LOS AXIOS ==================
+  const getToken = () => localStorage.getItem("accessToken");
+  // =======================================================================
+
   useEffect(() => {
     fetchCounts();
     fetchMonthlyBookings();
@@ -39,12 +53,14 @@ const Dashboard = () => {
 
   const fetchCounts = async () => {
     try {
+      const token = getToken();
+      // Solo manda el token en rutas privadas (booking, users, usermobile, tours)
       const [bookings, users, tours, subscribers, messages] = await Promise.all([
-        axios.get(`${BASE_URL}/booking`, { withCredentials: true }),
-        axios.get(`${BASE_URL}/usermobile`, { withCredentials: true }),
-        axios.get(`${BASE_URL}/tours`, { withCredentials: true }),
-        axios.get(`${BASE_URL}/subscribe`),
-        axios.get(`${BASE_URL}/contact`)
+        axios.get(`${BASE_URL}/booking`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${BASE_URL}/usermobile`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${BASE_URL}/tours`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${BASE_URL}/subscribe`), // Publico, no manda token
+        axios.get(`${BASE_URL}/contact`)    // Publico, no manda token
       ]);
       setCounts(prev => ({
         ...prev,
@@ -61,7 +77,10 @@ const Dashboard = () => {
 
   const fetchMonthlyBookings = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/booking/stats/monthly`);
+      const token = getToken();
+      const res = await axios.get(`${BASE_URL}/booking/stats/monthly`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setBookingStats(res.data);
     } catch (err) {
       console.error(err);
@@ -70,7 +89,11 @@ const Dashboard = () => {
 
   const fetchReviewStats = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/review/stats`);
+      // Reviews pueden ser públicos o protegidos, depende de tu backend. Si es privada, manda token
+      const token = getToken();
+      const res = await axios.get(`${BASE_URL}/review/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setReviewStats(res.data);
     } catch (err) {
       console.error(err);
@@ -79,7 +102,10 @@ const Dashboard = () => {
 
   const fetchIncomeStats = async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/booking/stats/income`);
+      const token = getToken();
+      const res = await axios.get(`${BASE_URL}/booking/stats/income`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setCounts(prev => ({ ...prev, incomeByMonth: res.data }));
     } catch (err) {
       console.error(err);
