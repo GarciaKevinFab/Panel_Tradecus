@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Form, FormGroup, Button } from "reactstrap";
@@ -9,10 +9,21 @@ import { BASE_URL } from "../../utils/config";
 import { AuthContext } from "../../context/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import "../../styles/bookings/createBooking.css";
+import moment from "moment";
 
 const CreateBooking = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(AuthContext);
+
+  // OBTIENE LA FECHA DESDE LA URL (query param)
+  const searchParams = new URLSearchParams(location.search);
+  const dateParam = searchParams.get('date');
+
+  // INICIALIZA booking.bookAt A LAS 12:00 del día seleccionado
+  const initialBookAt = dateParam
+    ? moment(dateParam).set({ hour: 12, minute: 0, second: 0, millisecond: 0 }).toDate()
+    : moment().set({ hour: 12, minute: 0, second: 0, millisecond: 0 }).toDate();
 
   const [tours, setTours] = useState([]);
   const [tourType, setTourType] = useState("private");
@@ -26,7 +37,7 @@ const CreateBooking = () => {
     tourName: "",
     phone: "",
     guestSize: 1,
-    bookAt: new Date(),
+    bookAt: initialBookAt,
   });
   const [dni, setDni] = useState(new Array(1).fill(""));
   const [userData, setUserData] = useState(new Array(1).fill({}));
@@ -79,9 +90,8 @@ const CreateBooking = () => {
     if (selectedTour && booking.guestSize) {
       const unitPrice = Number(selectedTour.price || 0);
       let total = 0;
-      // Si tu lógica cambia, solo ajusta esto.
       if (tourType === "private") {
-        total = unitPrice * 4 * booking.guestSize; // o solo * booking.guestSize si lo prefieres
+        total = unitPrice * 4 * booking.guestSize;
       } else {
         total = unitPrice * booking.guestSize;
       }
@@ -127,6 +137,7 @@ const CreateBooking = () => {
     allUserDataValid &&
     /^\d{9}$/.test(booking.phone);
 
+  // LA CLAVE: fuerza a 12:00 antes de enviar al backend
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -140,13 +151,21 @@ const CreateBooking = () => {
       return;
     }
 
+    const fixedBookAt = moment(booking.bookAt)
+      .set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
+      .toISOString();
+
+    // Verifica antes de enviar
+    // console.log("FECHA QUE SE MANDA:", fixedBookAt);
+
     const bookingData = {
       ...booking,
+      bookAt: fixedBookAt,
       userData: userData.filter(
         (item) => item.nombres && item.apellidoPaterno && item.apellidoMaterno
       ),
       tourType: tourType,
-      price: totalPrice, // <<== ENVÍA EL PRECIO
+      price: totalPrice,
     };
 
     axios
