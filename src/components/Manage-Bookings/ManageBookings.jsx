@@ -29,8 +29,10 @@ const ManageBookings = () => {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BASE_URL}/booking`, { withCredentials: true });
-      const events = res.data.data.map(booking => ({
+      const token = localStorage.getItem("accessToken");
+      const res = await axios.get(`${BASE_URL}/booking`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }); const events = res.data.data.map(booking => ({
         ...booking,
         start: new Date(booking.bookAt),
         end: new Date(booking.bookAt),
