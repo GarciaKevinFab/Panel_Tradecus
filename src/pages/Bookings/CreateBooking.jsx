@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'; // Quitado useLocation
+import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Form, FormGroup, Button } from "reactstrap";
@@ -17,7 +17,9 @@ const CreateBooking = () => {
   const [tours, setTours] = useState([]);
   const [tourType, setTourType] = useState("private");
   const [selectedTour, setSelectedTour] = useState(null);
-  const [maxGuests, setMaxGuests] = useState(2); // por defecto para privado
+  const [maxGuests, setMaxGuests] = useState(2);
+  const [totalPrice, setTotalPrice] = useState(0);
+
   const [booking, setBooking] = useState({
     userId: user ? user._id : "",
     userEmail: user ? user.email : "",
@@ -49,7 +51,7 @@ const CreateBooking = () => {
       });
   }, []);
 
-  // Cuando se selecciona un tour, actualizar maxGuests
+  // Cuando se selecciona un tour, actualizar maxGuests y el objeto tour
   useEffect(() => {
     if (booking.tourName) {
       const tourObj = tours.find(t => t.title === booking.tourName);
@@ -71,6 +73,23 @@ const CreateBooking = () => {
     setUserData(new Array(booking.guestSize).fill({}));
     setDocumentTypes(new Array(booking.guestSize).fill("dni"));
   }, [booking.guestSize]);
+
+  // CALCULA EL TOTAL
+  useEffect(() => {
+    if (selectedTour && booking.guestSize) {
+      const unitPrice = Number(selectedTour.price || 0);
+      let total = 0;
+      // Si tu lógica cambia, solo ajusta esto.
+      if (tourType === "private") {
+        total = unitPrice * 4 * booking.guestSize; // o solo * booking.guestSize si lo prefieres
+      } else {
+        total = unitPrice * booking.guestSize;
+      }
+      setTotalPrice(total);
+    } else {
+      setTotalPrice(0);
+    }
+  }, [selectedTour, booking.guestSize, tourType]);
 
   const handleTourTypeChange = (e) => {
     const newTourType = e.target.value;
@@ -127,6 +146,7 @@ const CreateBooking = () => {
         (item) => item.nombres && item.apellidoPaterno && item.apellidoMaterno
       ),
       tourType: tourType,
+      price: totalPrice, // <<== ENVÍA EL PRECIO
     };
 
     axios
@@ -142,6 +162,7 @@ const CreateBooking = () => {
         setUserData(new Array(1).fill({}));
         setDni(new Array(1).fill(""));
         setDocumentTypes(new Array(1).fill("dni"));
+        setTotalPrice(0);
         navigate('/manage_bookings');
       })
       .catch(() => {
@@ -158,9 +179,11 @@ const CreateBooking = () => {
           <select
             required
             value={booking.tourName}
-            onChange={(e) =>
-              setBooking((prev) => ({ ...prev, tourName: e.target.value }))
-            }
+            onChange={(e) => {
+              setBooking((prev) => ({ ...prev, tourName: e.target.value }));
+              const tour = tours.find(t => t.title === e.target.value);
+              setSelectedTour(tour || null);
+            }}
           >
             <option value="">Seleccione un tour</option>
             {Array.isArray(tours) &&
@@ -220,6 +243,12 @@ const CreateBooking = () => {
               setDocumentTypes={setDocumentTypes}
             />
           ))}
+        </FormGroup>
+        <FormGroup>
+          <label>Total a pagar:</label>
+          <div style={{ fontWeight: 700, fontSize: 22 }}>
+            S/. {totalPrice}
+          </div>
         </FormGroup>
         <Button onClick={handleBack} className="secondary">
           <FaArrowLeft /> Regresar

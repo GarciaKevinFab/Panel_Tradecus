@@ -14,11 +14,17 @@ Modal.setAppElement('#root');
 const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
   const [bookingInfo, setBookingInfo] = useState({});
   const navigate = useNavigate();
-  const pdfRef = useRef(); // 📄 Referencia para exportar como PDF
+  const pdfRef = useRef();
 
+  // Trae siempre la reserva completa si falta price o es solo el _id
   useEffect(() => {
-    if (booking) {
+    if (!booking) return;
+    if (booking.price && booking.userData) {
       setBookingInfo(booking);
+    } else if (booking._id) {
+      axios.get(`${BASE_URL}/booking/${booking._id}`)
+        .then(res => setBookingInfo(res.data.data))
+        .catch(() => setBookingInfo(booking));
     }
   }, [booking]);
 
@@ -41,7 +47,6 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
     }
   };
 
-  // 🧾 Descargar nota de pedido
   const handleDownloadPDF = () => {
     const element = pdfRef.current;
     const opt = {
@@ -89,7 +94,7 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
           <p><strong>Teléfono:</strong> {bookingInfo.phone}</p>
         </div>
 
-        {bookingInfo.userData && (
+        {bookingInfo.userData && Array.isArray(bookingInfo.userData) && (
           <div className="proforma-section">
             <h4>👥 Datos de los Invitados</h4>
             {bookingInfo.userData.map((user, index) => (
@@ -101,6 +106,13 @@ const CustomModal = ({ isOpen, onRequestClose, booking, onBookingDeleted }) => {
             ))}
           </div>
         )}
+
+        <div className="proforma-section">
+          <h4>💸 Total a Pagar</h4>
+          <p style={{ fontWeight: "bold", fontSize: 18 }}>
+            S/. {bookingInfo.price !== undefined ? bookingInfo.price : "--"}
+          </p>
+        </div>
       </div>
 
       <div className="CustomModal-buttons">
