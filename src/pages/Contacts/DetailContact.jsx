@@ -9,35 +9,49 @@ import '../../styles/contact/contactDetail.css';
 
 const ContactDetail = () => {
   const [contact, setContact] = useState(null);
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
     const fetchContact = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(`${BASE_URL}/contact/${id}`);
-        setContact(response.data);
-        setLoading(false);
+        if (!response.data || !response.data.name) {
+          setContact(null);
+          toast.error("No se encontró el contacto.");
+        } else {
+          setContact(response.data);
+        }
       } catch (error) {
         toast.error("Error al obtener el contacto");
+        setContact(null);
+      } finally {
         setLoading(false);
       }
     };
     fetchContact();
   }, [id]);
 
+  const handleBack = () => {
+    navigate('/manage_contacts');
+  };
+
   if (loading) {
     return <div className="loading">Cargando...</div>;
   }
 
   if (!contact) {
-    return <div className="not-found">No se encontró el contacto</div>;
+    return (
+      <div className="not-found">
+        <h3>No se encontró el contacto</h3>
+        <Button onClick={handleBack} className="back-button">
+          <FaArrowLeft /> Regresar
+        </Button>
+      </div>
+    );
   }
-
-  const handleBack = () => {
-    navigate('/manage_contacts');
-  };
 
   return (
     <div className="contact-detail-container">

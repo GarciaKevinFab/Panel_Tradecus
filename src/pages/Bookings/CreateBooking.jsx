@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // Quitado useLocation
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Form, FormGroup, Button } from "reactstrap";
@@ -11,12 +11,13 @@ import "react-toastify/dist/ReactToastify.css";
 import "../../styles/bookings/createBooking.css";
 
 const CreateBooking = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
   const [tours, setTours] = useState([]);
   const [tourType, setTourType] = useState("private");
+  const [selectedTour, setSelectedTour] = useState(null);
+  const [maxGuests, setMaxGuests] = useState(2); // por defecto para privado
   const [booking, setBooking] = useState({
     userId: user ? user._id : "",
     userEmail: user ? user.email : "",
@@ -38,59 +39,61 @@ const CreateBooking = () => {
       .get(`${BASE_URL}/tours`, { withCredentials: true })
       .then((response) => {
         if (response.data && Array.isArray(response.data.data)) {
-          setTours(response.data.data); // Use response.data.data
+          setTours(response.data.data);
         } else {
-          console.error(
-            "Received data is not in expected format:",
-            response.data
-          );
+          toast.error("No se pudieron cargar los tours.");
         }
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
+        toast.error("No se pudieron cargar los tours.");
       });
   }, []);
 
+  // Cuando se selecciona un tour, actualizar maxGuests
   useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const selectedDate = queryParams.get("date");
-    if (selectedDate) {
-      setBooking((prev) => ({ ...prev, bookAt: new Date(selectedDate) }));
-    }
-  }, [location]);
+    if (booking.tourName) {
+      const tourObj = tours.find(t => t.title === booking.tourName);
+      setSelectedTour(tourObj || null);
+      let max = tourType === "private" ? 2 : (tourObj?.maxGroupSize || 1);
+      setMaxGuests(max);
 
+      // Ajustar cantidad si sobrepasa
+      if (booking.guestSize > max) {
+        setBooking(prev => ({ ...prev, guestSize: max }));
+        toast.info(`El máximo de personas para este tour es ${max}.`);
+      }
+    }
+  }, [booking.tourName, tours, tourType]);
+
+  // Cuando cambia guestSize, actualiza arrays de dni y userData
   useEffect(() => {
     setDni(new Array(booking.guestSize).fill(""));
     setUserData(new Array(booking.guestSize).fill({}));
     setDocumentTypes(new Array(booking.guestSize).fill("dni"));
   }, [booking.guestSize]);
 
-
-  const getMaxGuests = () => {
-    return tourType === "private" ? 2 : 25;
-  };
-
   const handleTourTypeChange = (e) => {
     const newTourType = e.target.value;
     setTourType(newTourType);
-    const maxGuests = getMaxGuests();
-    if (booking.guestSize > maxGuests) {
-      setBooking((prev) => ({ ...prev, guestSize: maxGuests }));
-      toast.info(
-        `Número máximo de invitados para ${newTourType} es ${maxGuests}.`
-      );
+    let max = 1;
+    if (newTourType === "private") {
+      max = 2;
+    } else if (selectedTour) {
+      max = selectedTour.maxGroupSize || 1;
+    }
+    setMaxGuests(max);
+    if (booking.guestSize > max) {
+      setBooking((prev) => ({ ...prev, guestSize: max }));
+      toast.info(`El máximo de personas para este tipo de tour es ${max}.`);
     }
   };
 
   const handleGuestSizeChange = (e) => {
     const newGuestSize = parseInt(e.target.value, 10);
-    const maxGuests = getMaxGuests();
-    if (newGuestSize <= maxGuests) {
+    if (newGuestSize <= maxGuests && newGuestSize >= 1) {
       setBooking((prev) => ({ ...prev, guestSize: newGuestSize }));
     } else {
-      toast.error(
-        `Número de invitados excede el límite para el tipo de tour seleccionado.`
-      );
+      toast.error(`Número de invitados excede el máximo permitido (${maxGuests}).`);
     }
   };
 
@@ -108,6 +111,11 @@ const CreateBooking = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    if (!booking.tourName) {
+      toast.error("Selecciona un tour.");
+      return;
+    }
+
     if (!isBookingDataValid) {
       toast.error("Por favor, completa correctamente los datos de todos los participantes.");
       return;
@@ -123,8 +131,8 @@ const CreateBooking = () => {
 
     axios
       .post(`${BASE_URL}/booking`, bookingData, { withCredentials: true })
-      .then((response) => {
-        console.log(response.data);
+      .then(() => {
+        toast.success("Reserva creada con éxito.");
         setBooking((prev) => ({
           ...prev,
           tourName: "",
@@ -134,11 +142,9 @@ const CreateBooking = () => {
         setUserData(new Array(1).fill({}));
         setDni(new Array(1).fill(""));
         setDocumentTypes(new Array(1).fill("dni"));
-        toast.success("Reserva creada con éxito.");
         navigate('/manage_bookings');
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
         toast.error("Ocurrió un error al crear la reserva.");
       });
   };
@@ -169,7 +175,7 @@ const CreateBooking = () => {
           <label>Tipo de Tour:</label>
           <select required value={tourType} onChange={handleTourTypeChange}>
             <option value="private">Privado (1-2 personas)</option>
-            <option value="corporate">Corporativo (1-25 personas)</option>
+            <option value="corporate">Corporativo (hasta el máximo del tour)</option>
           </select>
         </FormGroup>
 
@@ -179,10 +185,13 @@ const CreateBooking = () => {
             type="number"
             required
             min="1"
-            max={getMaxGuests()}
+            max={maxGuests}
             value={booking.guestSize}
             onChange={handleGuestSizeChange}
           />
+          <div style={{ fontSize: 12, color: "#888" }}>
+            Máximo permitido para este tour: {maxGuests}
+          </div>
         </FormGroup>
         <FormGroup>
           <label>Teléfono:</label>
@@ -193,6 +202,8 @@ const CreateBooking = () => {
             onChange={(e) =>
               setBooking((prev) => ({ ...prev, phone: e.target.value }))
             }
+            placeholder="Ej: 987654321"
+            maxLength={9}
           />
         </FormGroup>
         <FormGroup>
@@ -209,7 +220,6 @@ const CreateBooking = () => {
               setDocumentTypes={setDocumentTypes}
             />
           ))}
-
         </FormGroup>
         <Button onClick={handleBack} className="secondary">
           <FaArrowLeft /> Regresar

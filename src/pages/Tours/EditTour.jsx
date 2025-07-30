@@ -9,6 +9,8 @@ import '../../styles/tour/editTour.css';
 const EditTour = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
     const [tourData, setTourData] = useState({
         title: '',
@@ -41,6 +43,8 @@ const EditTour = () => {
                 });
             } catch (error) {
                 toast.error('Ocurrió un error al obtener el tour');
+            } finally {
+                setLoading(false);
             }
         };
         fetchTour();
@@ -61,40 +65,71 @@ const EditTour = () => {
         });
     };
 
+    const validate = () => {
+        const {
+            title, city, address, duration,
+            desc, price, maxGroupSize
+        } = tourData;
+        if (!title || !city || !address || !duration || !desc || !price || !maxGroupSize) {
+            toast.error("Completa todos los campos requeridos.");
+            return false;
+        }
+        if (isNaN(duration) || Number(duration) <= 0) {
+            toast.error("La duración debe ser un número mayor a 0.");
+            return false;
+        }
+        if (isNaN(price) || Number(price) <= 0) {
+            toast.error("El precio debe ser mayor a 0.");
+            return false;
+        }
+        if (isNaN(maxGroupSize) || Number(maxGroupSize) <= 0) {
+            toast.error("El máximo de personas debe ser mayor a 0.");
+            return false;
+        }
+        return true;
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+        if (!validate()) return;
+        setSubmitting(true);
+
         try {
             await axios.put(`${BASE_URL}/tours/${id}`, tourData);
             toast.success('Tour actualizado exitosamente!');
-            navigate("/manage_tours");
+            setTimeout(() => navigate("/manage_tours"), 800);
         } catch (error) {
             toast.error('Ocurrió un error al actualizar el tour');
+        } finally {
+            setSubmitting(false);
         }
     };
 
+    if (loading) return <div className="loading">Cargando...</div>;
+
     return (
         <div className="EditTour">
-            <form onSubmit={handleSubmit}>
-                <label>Titulo:
+            <form onSubmit={handleSubmit} autoComplete="off">
+                <label>Título:
                     <input type="text" name="title" value={tourData.title} onChange={handleChange} required />
                 </label>
-                <label>Cuidad:
+                <label>Ciudad:
                     <input type="text" name="city" value={tourData.city} onChange={handleChange} required />
                 </label>
                 <label>Dirección:
                     <input type="text" name="address" value={tourData.address} onChange={handleChange} required />
                 </label>
                 <label>Duración (horas):
-                    <input type="number" name="duration" value={tourData.duration} onChange={handleChange} required />
+                    <input type="number" name="duration" value={tourData.duration} min={1} onChange={handleChange} required />
                 </label>
                 <label>Descripción:
                     <textarea name="desc" value={tourData.desc} onChange={handleChange} required />
                 </label>
                 <label>Precio:
-                    <input type="number" name="price" value={tourData.price} onChange={handleChange} required />
+                    <input type="number" name="price" value={tourData.price} min={1} onChange={handleChange} required />
                 </label>
                 <label>Máximo de personas:
-                    <input type="number" name="maxGroupSize" value={tourData.maxGroupSize} onChange={handleChange} required />
+                    <input type="number" name="maxGroupSize" value={tourData.maxGroupSize} min={1} onChange={handleChange} required />
                 </label>
                 <label>Destacado:
                     <input
@@ -104,9 +139,28 @@ const EditTour = () => {
                         onChange={handleChange}
                     />
                 </label>
-                <button type="submit"><FaEdit /> Actualizar Tour</button>
+                {tourData.photos.length > 0 && (
+                    <div className="photos-preview">
+                        <label>Fotos actuales:</label>
+                        <div className="photos-list">
+                            {tourData.photos.map((photo, i) => (
+                                <img
+                                    key={i}
+                                    src={photo.secureUrl || photo.url || photo}
+                                    alt={`Foto ${i + 1}`}
+                                    width={50}
+                                    height={50}
+                                    style={{ objectFit: 'cover', borderRadius: 5, margin: "3px" }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <button type="submit" disabled={submitting}>
+                    <FaEdit /> {submitting ? "Actualizando..." : "Actualizar Tour"}
+                </button>
             </form>
-            <button onClick={handleBack}><FaArrowLeft /> Regresar</button>
+            <button onClick={handleBack} disabled={submitting}><FaArrowLeft /> Regresar</button>
         </div>
     );
 };

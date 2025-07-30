@@ -9,21 +9,25 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './manageBookings.css';
 import { useNavigate } from 'react-router-dom';
 import CustomModal from '../Modal/CustomModal';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const localizer = momentLocalizer(moment);
 
 const ManageBookings = () => {
-
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [modalIsOpen, setModalIsOpen] = useState(false);
 
   useEffect(() => {
     fetchBookings();
+    // eslint-disable-next-line
   }, []);
 
   const fetchBookings = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/booking`, { withCredentials: true });
       const events = res.data.data.map(booking => ({
@@ -34,7 +38,9 @@ const ManageBookings = () => {
       }));
       setBookings(events);
     } catch (err) {
-      console.error(err);
+      toast.error("No se pudieron cargar las reservas. Intenta recargar la página.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -44,13 +50,14 @@ const ManageBookings = () => {
   };
 
   const handleBookingDeleted = (deletedBookingId) => {
-    // Actualiza el estado eliminando la reserva
     setBookings(bookings.filter((booking) => booking._id !== deletedBookingId));
+    toast.success("Reserva eliminada correctamente.");
+    setModalIsOpen(false);
   };
 
   const handleSelectSlot = (slotInfo) => {
     navigate(`/create_booking?date=${slotInfo.start.toISOString()}`);
-  }
+  };
 
   const eventStyleGetter = () => ({
     style: {
@@ -60,6 +67,7 @@ const ManageBookings = () => {
       color: 'white',
     }
   });
+
   const messages = {
     today: 'Hoy',
     previous: 'Anterior',
@@ -76,17 +84,23 @@ const ManageBookings = () => {
       <p>Haz clic sobre una fecha para crear una reserva, o sobre un evento para ver detalles.</p>
 
       <div className="calendar-container">
-        <Calendar
-          localizer={localizer}
-          events={bookings}
-          startAccessor="start"
-          endAccessor="end"
-          selectable='ignoreEvents'
-          onSelectEvent={handleSelectEvent}
-          onSelectSlot={handleSelectSlot}
-          eventPropGetter={eventStyleGetter}
-          messages={messages}
-        />
+        {loading ? (
+          <div className="calendar-loading">
+            <span>Cargando reservas...</span>
+          </div>
+        ) : (
+          <Calendar
+            localizer={localizer}
+            events={bookings}
+            startAccessor="start"
+            endAccessor="end"
+            selectable='ignoreEvents'
+            onSelectEvent={handleSelectEvent}
+            onSelectSlot={handleSelectSlot}
+            eventPropGetter={eventStyleGetter}
+            messages={messages}
+          />
+        )}
       </div>
 
       <CustomModal
@@ -96,7 +110,6 @@ const ManageBookings = () => {
         onBookingDeleted={handleBookingDeleted}
       />
     </div>
-
   );
 };
 

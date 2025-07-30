@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './manageTours.css';
 import { FaEdit, FaTrashAlt, FaEye, FaPlus, FaGlobe } from 'react-icons/fa';
+import ConfirmAlert from '../Alerts/ConfirmAlert';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -14,6 +15,7 @@ const ManageTours = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
         const fetchTours = async () => {
@@ -31,7 +33,6 @@ const ManageTours = () => {
 
                 setTours(formatted);
             } catch (err) {
-                console.error(err);
                 toast.error("Error al obtener los Tours");
             } finally {
                 setLoading(false);
@@ -41,18 +42,23 @@ const ManageTours = () => {
         fetchTours();
     }, []);
 
-    const handleDeleteTour = async (id) => {
-        const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar este tour?');
-        if (!confirmDelete) return;
-
-        try {
-            await axios.delete(`${BASE_URL}/tours/${id}`);
-            setTours(prev => prev.filter(tour => tour._id !== id));
-            toast.success("Tour eliminado exitosamente");
-        } catch (error) {
-            console.error(error);
-            toast.error("Error al eliminar el tour");
-        }
+    const handleDeleteTour = (id) => {
+        ConfirmAlert({
+            title: "¿Eliminar tour?",
+            message: "¿Estás seguro de que deseas eliminar este tour?",
+            onConfirm: async () => {
+                setDeletingId(id);
+                try {
+                    await axios.delete(`${BASE_URL}/tours/${id}`);
+                    setTours(prev => prev.filter(tour => tour._id !== id));
+                    toast.success("Tour eliminado exitosamente");
+                } catch (error) {
+                    toast.error("Error al eliminar el tour");
+                } finally {
+                    setDeletingId(null);
+                }
+            }
+        });
     };
 
     const filteredTours = tours.filter(t =>
@@ -77,7 +83,7 @@ const ManageTours = () => {
                 value={searchTerm}
                 onChange={(e) => {
                     setSearchTerm(e.target.value);
-                    setCurrentPage(1); // Reiniciar paginación
+                    setCurrentPage(1);
                 }}
             />
 
@@ -106,7 +112,13 @@ const ManageTours = () => {
                                             <td>{tour.rating}</td>
                                             <td className="actions">
                                                 <Link to={`/edit_tour/${tour._id}`} className="btn edit"><FaEdit /> Editar</Link>
-                                                <button onClick={() => handleDeleteTour(tour._id)} className="btn delete"><FaTrashAlt /> Eliminar</button>
+                                                <button
+                                                    onClick={() => handleDeleteTour(tour._id)}
+                                                    className="btn delete"
+                                                    disabled={deletingId === tour._id}
+                                                >
+                                                    <FaTrashAlt /> Eliminar
+                                                </button>
                                                 <Link to={`/detail_tour/${tour._id}`} className="btn view"><FaEye /> Ver</Link>
                                             </td>
                                         </tr>

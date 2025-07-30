@@ -6,10 +6,12 @@ import { BASE_URL } from '../../utils/config';
 import 'react-toastify/dist/ReactToastify.css';
 import './manageUsers.css';
 import { FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import ConfirmAlert from '../Alerts/ConfirmAlert';
 
 const ManageUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState(null);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -35,20 +37,25 @@ const ManageUsers = () => {
         fetchUsers();
     }, []);
 
-
-    const handleDelete = async (id, source) => {
-        try {
-            const route = source === 'mobile' ? 'usermobile' : 'users';
-
-            await axios.delete(`${BASE_URL}/${route}/${id}`);
-
-            toast.success('Usuario eliminado exitosamente!');
-            setUsers(prev => prev.filter(user => user._id !== id));
-        } catch (error) {
-            toast.error('Ocurrió un error al eliminar el usuario');
-        }
+    const handleDelete = (id, source) => {
+        ConfirmAlert({
+            title: "¿Eliminar usuario?",
+            message: "¿Estás seguro de que deseas eliminar este usuario?",
+            onConfirm: async () => {
+                setDeletingId(id);
+                try {
+                    const route = source === 'mobile' ? 'usermobile' : 'users';
+                    await axios.delete(`${BASE_URL}/${route}/${id}`);
+                    toast.success('Usuario eliminado exitosamente!');
+                    setUsers(prev => prev.filter(user => user._id !== id));
+                } catch (error) {
+                    toast.error('Ocurrió un error al eliminar el usuario');
+                } finally {
+                    setDeletingId(null);
+                }
+            }
+        });
     };
-
 
     return (
         <div className="ManageUsers">
@@ -80,10 +87,10 @@ const ManageUsers = () => {
                                         <button
                                             onClick={() => handleDelete(user._id, user.source)}
                                             className="btn delete-btn"
+                                            disabled={deletingId === user._id}
                                         >
                                             <FaTrashAlt /> Eliminar
                                         </button>
-
                                     </td>
                                 </tr>
                             ))}

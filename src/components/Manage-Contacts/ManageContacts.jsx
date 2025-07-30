@@ -12,33 +12,39 @@ import './manageContacts.css';
 const ManageContacts = () => {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState(null);
 
   useEffect(() => {
     fetchContacts();
+    // eslint-disable-next-line
   }, []);
 
   const fetchContacts = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${BASE_URL}/contact`);
       setContacts(res.data);
     } catch (error) {
-      toast.error("Error al obtener los contactos");
+      toast.error("Error al obtener los contactos.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCheck = async (contactId) => {
+  const handleCheck = (contactId) => {
     ConfirmAlert({
       title: 'Confirmación',
       message: '¿Estás seguro que fue atendido?',
       onConfirm: async () => {
+        setProcessingId(contactId);
         try {
           await axios.delete(`${BASE_URL}/contact/${contactId}`);
-          toast.success("Contacto atendido y eliminado correctamente");
-          fetchContacts();
+          toast.success("Contacto atendido y eliminado correctamente.");
+          setContacts(contacts => contacts.filter(c => c._id !== contactId)); // Actualiza local, UX más rápida
         } catch (error) {
-          toast.error("Error al eliminar el contacto");
+          toast.error("Error al eliminar el contacto.");
+        } finally {
+          setProcessingId(null);
         }
       }
     });
@@ -50,7 +56,7 @@ const ManageContacts = () => {
       {loading ? (
         <p className="loading">Cargando...</p>
       ) : contacts.length === 0 ? (
-        <p className="no-contacts">No hay contactos disponibles</p>
+        <p className="no-contacts">No hay contactos disponibles.</p>
       ) : (
         <div className="table-container">
           <table>
@@ -68,12 +74,15 @@ const ManageContacts = () => {
                 <tr key={contact._id}>
                   <td>{contact.name}</td>
                   <td>{contact.email}</td>
-                  <td>{contact.message}</td>
+                  <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {contact.message}
+                  </td>
                   <td>
                     <input
                       type="checkbox"
                       onChange={() => handleCheck(contact._id)}
                       title="Marcar como atendido"
+                      disabled={processingId === contact._id}
                     />
                   </td>
                   <td>

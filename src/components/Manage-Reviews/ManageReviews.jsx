@@ -6,36 +6,48 @@ import 'react-toastify/dist/ReactToastify.css';
 import './manageReviews.css';
 import { FaTrashAlt, FaStar } from 'react-icons/fa';
 
+// Si tienes un ConfirmAlert personalizado, úsalo. Sino, quita el import y deja window.confirm
+import ConfirmAlert from '../Alerts/ConfirmAlert';
+
 const ManageReviews = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const res = await axios.get(`${BASE_URL}/review`);
-        setReviews(res.data.data);
-      } catch (error) {
-        toast.error("Error al obtener las reseñas");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchReviews();
+    // eslint-disable-next-line
   }, []);
 
-  const handleDelete = async (reviewId) => {
-    const confirmDelete = window.confirm('¿Estás seguro de eliminar esta reseña?');
-    if (!confirmDelete) return;
-
+  const fetchReviews = async () => {
+    setLoading(true);
     try {
-      await axios.delete(`${BASE_URL}/review/${reviewId}`);
-      setReviews(reviews.filter(review => review._id !== reviewId));
-      toast.success('Reseña eliminada exitosamente!');
+      const res = await axios.get(`${BASE_URL}/review`);
+      setReviews(res.data.data);
     } catch (error) {
-      toast.error('Ocurrió un error al eliminar la reseña');
+      toast.error("Error al obtener las reseñas.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleDelete = (reviewId) => {
+    ConfirmAlert({
+      title: "Confirmar eliminación",
+      message: "¿Estás seguro de eliminar esta reseña?",
+      onConfirm: async () => {
+        setDeletingId(reviewId);
+        try {
+          await axios.delete(`${BASE_URL}/review/${reviewId}`);
+          setReviews(reviews => reviews.filter(review => review._id !== reviewId));
+          toast.success('Reseña eliminada exitosamente!');
+        } catch (error) {
+          toast.error('Ocurrió un error al eliminar la reseña');
+        } finally {
+          setDeletingId(null);
+        }
+      }
+    });
   };
 
   return (
@@ -60,7 +72,9 @@ const ManageReviews = () => {
               {reviews.map((review) => (
                 <tr key={review._id}>
                   <td>{review.username}</td>
-                  <td>{review.reviewText}</td>
+                  <td style={{ maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {review.reviewText}
+                  </td>
                   <td>
                     <span className="rating">
                       {Array.from({ length: review.rating }, (_, i) => (
@@ -73,6 +87,7 @@ const ManageReviews = () => {
                       onClick={() => handleDelete(review._id)}
                       className="delete-review"
                       title="Eliminar reseña"
+                      disabled={deletingId === review._id}
                     >
                       <FaTrashAlt />
                     </button>
