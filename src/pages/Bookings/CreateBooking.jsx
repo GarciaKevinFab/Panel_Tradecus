@@ -57,13 +57,13 @@ const CreateBooking = () => {
       let max = tourType === "private" ? 2 : (tourObj?.maxGroupSize || 1);
       setMaxGuests(max);
 
-      // Ajustar cantidad si sobrepasa
       if (booking.guestSize > max) {
         setBooking(prev => ({ ...prev, guestSize: max }));
         toast.info(`El máximo de personas para este tour es ${max}.`);
       }
     }
-  }, [booking.tourName, tours, tourType]);
+    // eslint-disable-next-line
+  }, [booking.tourName, tours, tourType, booking.guestSize]);
 
   // Cuando cambia guestSize, actualiza arrays de dni y userData
   useEffect(() => {

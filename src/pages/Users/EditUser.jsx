@@ -76,7 +76,7 @@ const EditUser = () => {
             toast.error("Completa todos los campos.");
             return false;
         }
-        const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+        const emailRegex = /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/;
         if (!emailRegex.test(email)) {
             toast.error("Email inválido.");
             return false;
