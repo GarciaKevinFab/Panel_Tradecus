@@ -25,9 +25,13 @@ const Dashboard = () => {
   }, []);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // === NUEVO: Selector para reservas ===
+  const [bookingType, setBookingType] = useState('monthly'); // monthly, fortnight, daily
   const [bookingStats, setBookingStats] = useState([]);
-  const [reviewStats, setReviewStats] = useState([]);
-  const [incomeType, setIncomeType] = useState('monthly'); // <-- Nuevo
+
+  // === Lo de ingresos que ya tenías ===
+  const [incomeType, setIncomeType] = useState('monthly');
   const [counts, setCounts] = useState({
     bookings: 0,
     users: 0,
@@ -36,23 +40,34 @@ const Dashboard = () => {
     messages: 0,
     incomeByMonth: []
   });
+
+  const [reviewStats, setReviewStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getToken = () => localStorage.getItem("accessToken");
 
+  // === Carga inicial ===
   useEffect(() => {
     fetchCounts();
-    fetchMonthlyBookings();
+    fetchBookingsStats();
     fetchReviewStats();
     setLoading(false);
     // eslint-disable-next-line
   }, []);
 
+  // === Cuando cambia el rango de reservas (bookingType) ===
+  useEffect(() => {
+    fetchBookingsStats();
+    // eslint-disable-next-line
+  }, [bookingType]);
+
+  // === Cuando cambia el rango de ingresos (incomeType) ===
   useEffect(() => {
     fetchIncomeStats();
     // eslint-disable-next-line
   }, [incomeType]);
 
+  // === FUNCIONES BACKEND ===
   const fetchCounts = async () => {
     try {
       const token = getToken();
@@ -76,18 +91,21 @@ const Dashboard = () => {
     }
   };
 
-  const fetchMonthlyBookings = async () => {
+  // === RESERVAS ===
+  const fetchBookingsStats = async () => {
     try {
       const token = getToken();
-      const res = await axios.get(`${BASE_URL}/booking/stats/monthly`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let url = `${BASE_URL}/booking/stats/monthly`;
+      if (bookingType === 'daily') url = `${BASE_URL}/booking/stats/bookings/daily`;
+      if (bookingType === 'fortnight') url = `${BASE_URL}/booking/stats/bookings/fortnight`;
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setBookingStats(res.data);
     } catch (err) {
       console.error(err);
     }
   };
 
+  // === REVIEWS ===
   const fetchReviewStats = async () => {
     try {
       const token = getToken();
@@ -100,6 +118,7 @@ const Dashboard = () => {
     }
   };
 
+  // === INGRESOS ===
   const fetchIncomeStats = async () => {
     try {
       const token = getToken();
@@ -113,7 +132,16 @@ const Dashboard = () => {
     }
   };
 
-  const getLabel = d => {
+  // === LABELS ===
+  const getBookingLabel = d => {
+    if (!d._id) return "";
+    if (bookingType === "monthly") return `Mes ${d._id}`;
+    if (bookingType === "fortnight") return `Q${d._id.fortnight} - ${d._id.month}/${d._id.year}`;
+    if (bookingType === "daily") return `${d._id.day}/${d._id.month}/${d._id.year}`;
+    return "";
+  };
+
+  const getIncomeLabel = d => {
     if (!d._id) return "";
     if (incomeType === "monthly") return `Mes ${d._id}`;
     if (incomeType === "fortnight") return `Q${d._id.fortnight} - ${d._id.month}/${d._id.year}`;
@@ -121,9 +149,22 @@ const Dashboard = () => {
     return "";
   };
 
-  const handleDownloadExcel = () => {
+  // === DESCARGAS ===
+  const handleDownloadBookingsExcel = () => {
+    const dataToExport = bookingStats.map(item => ({
+      Periodo: getBookingLabel(item),
+      Reservas: item.count
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Reservas");
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `ReservasPor${bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}.xlsx`);
+  };
+
+  const handleDownloadIncomeExcel = () => {
     const dataToExport = counts.incomeByMonth.map(item => ({
-      Periodo: getLabel(item),
+      Periodo: getIncomeLabel(item),
       Ingreso: item.total
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -133,6 +174,7 @@ const Dashboard = () => {
     saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `IngresosPor${incomeType.charAt(0).toUpperCase() + incomeType.slice(1)}.xlsx`);
   };
 
+  // === UI ===
   return (
     <div className="dashboard">
       <h2>
@@ -170,10 +212,10 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Selector de rango */}
-          <div className="income-type-selector" style={{ marginBottom: 16 }}>
-            <label style={{ marginRight: 8 }}>Ver ingresos por: </label>
-            <select value={incomeType} onChange={e => setIncomeType(e.target.value)}>
+          {/* === Selector de reservas === */}
+          <div className="booking-type-selector" style={{ marginBottom: 16 }}>
+            <label style={{ marginRight: 8 }}>Ver reservas por: </label>
+            <select value={bookingType} onChange={e => setBookingType(e.target.value)}>
               <option value="monthly">Mes</option>
               <option value="fortnight">Quincena</option>
               <option value="daily">Día</option>
@@ -181,13 +223,21 @@ const Dashboard = () => {
           </div>
 
           <div className="dashboard-graphs">
+
             <div className="chart">
-              <div className="chart-header">
-                <h4>Reservas por mes</h4>
+              <div className="chart-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>Reservas por {bookingType === 'monthly' ? 'mes' : bookingType === 'fortnight' ? 'quincena' : 'día'}</span>
+                <button className="excel-btn" onClick={handleDownloadBookingsExcel}>
+                  <FaDownload style={{ marginRight: 6 }} />
+                  Descargar Excel
+                </button>
               </div>
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={bookingStats.map(d => ({ month: `Mes ${d._id}`, count: d.count }))}>
-                  <XAxis dataKey="month" />
+                <LineChart data={bookingStats.map(d => ({
+                  label: getBookingLabel(d),
+                  count: d.count
+                }))}>
+                  <XAxis dataKey="label" />
                   <YAxis />
                   <Tooltip />
                   <Line type="monotone" dataKey="count" stroke="#8884d8" />
@@ -219,19 +269,27 @@ const Dashboard = () => {
               </ResponsiveContainer>
             </div>
 
+            {/* === Selector de ingresos === */}
+            <div className="income-type-selector" style={{ marginBottom: 16 }}>
+              <label style={{ marginRight: 8 }}>Ver ingresos por: </label>
+              <select value={incomeType} onChange={e => setIncomeType(e.target.value)}>
+                <option value="monthly">Mes</option>
+                <option value="fortnight">Quincena</option>
+                <option value="daily">Día</option>
+              </select>
+            </div>
+
             <div className="chart">
-              <div className="chart-header">
-                <h4 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span>Ingresos por {incomeType === 'monthly' ? 'mes' : incomeType === 'fortnight' ? 'quincena' : 'día'}</span>
-                  <button className="excel-btn" onClick={handleDownloadExcel}>
-                    <FaDownload style={{ marginRight: 6 }} />
-                    Descargar Excel
-                  </button>
-                </h4>
+              <div className="chart-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span>Ingresos por {incomeType === 'monthly' ? 'mes' : incomeType === 'fortnight' ? 'quincena' : 'día'}</span>
+                <button className="excel-btn" onClick={handleDownloadIncomeExcel}>
+                  <FaDownload style={{ marginRight: 6 }} />
+                  Descargar Excel
+                </button>
               </div>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={counts.incomeByMonth.map(d => ({
-                  label: getLabel(d), income: d.total
+                  label: getIncomeLabel(d), income: d.total
                 }))}>
                   <XAxis dataKey="label" />
                   <YAxis />
