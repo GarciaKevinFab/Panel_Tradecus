@@ -15,12 +15,11 @@ import { saveAs } from 'file-saver';
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#00c49f'];
 
 const Dashboard = () => {
-  // GUARDA el token apenas llegues del login Google (token viene en la URL como query param)
   useEffect(() => {
     const url = new URL(window.location.href);
     const token = url.searchParams.get("token");
     if (token) {
-      localStorage.setItem("accessToken", token); // O usa "token" si prefieres, pero sé consistente en todo el proyecto
+      localStorage.setItem("accessToken", token);
       window.history.replaceState({}, document.title, "/dashboard");
     }
   }, []);
@@ -28,6 +27,7 @@ const Dashboard = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [bookingStats, setBookingStats] = useState([]);
   const [reviewStats, setReviewStats] = useState([]);
+  const [incomeType, setIncomeType] = useState('monthly'); // <-- Nuevo
   const [counts, setCounts] = useState({
     bookings: 0,
     users: 0,
@@ -38,29 +38,30 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  // =============== TOKEN UNIVERSAL PARA TODOS LOS AXIOS ==================
   const getToken = () => localStorage.getItem("accessToken");
-  // =======================================================================
 
   useEffect(() => {
     fetchCounts();
     fetchMonthlyBookings();
     fetchReviewStats();
-    fetchIncomeStats();
     setLoading(false);
     // eslint-disable-next-line
   }, []);
 
+  useEffect(() => {
+    fetchIncomeStats();
+    // eslint-disable-next-line
+  }, [incomeType]);
+
   const fetchCounts = async () => {
     try {
       const token = getToken();
-      // Solo manda el token en rutas privadas (booking, users, usermobile, tours)
       const [bookings, users, tours, subscribers, messages] = await Promise.all([
         axios.get(`${BASE_URL}/booking`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${BASE_URL}/usermobile`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${BASE_URL}/tours`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${BASE_URL}/subscribe`), // Publico, no manda token
-        axios.get(`${BASE_URL}/contact`)    // Publico, no manda token
+        axios.get(`${BASE_URL}/subscribe`),
+        axios.get(`${BASE_URL}/contact`)
       ]);
       setCounts(prev => ({
         ...prev,
@@ -89,7 +90,6 @@ const Dashboard = () => {
 
   const fetchReviewStats = async () => {
     try {
-      // Reviews pueden ser públicos o protegidos, depende de tu backend. Si es privada, manda token
       const token = getToken();
       const res = await axios.get(`${BASE_URL}/review/stats`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -103,26 +103,34 @@ const Dashboard = () => {
   const fetchIncomeStats = async () => {
     try {
       const token = getToken();
-      const res = await axios.get(`${BASE_URL}/booking/stats/income`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      let url = `${BASE_URL}/booking/stats/income`;
+      if (incomeType === 'daily') url += '/daily';
+      if (incomeType === 'fortnight') url += '/fortnight';
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setCounts(prev => ({ ...prev, incomeByMonth: res.data }));
     } catch (err) {
       console.error(err);
     }
   };
 
-  // === DESCARGA INGRESOS COMO EXCEL ===
+  const getLabel = d => {
+    if (!d._id) return "";
+    if (incomeType === "monthly") return `Mes ${d._id}`;
+    if (incomeType === "fortnight") return `Q${d._id.fortnight} - ${d._id.month}/${d._id.year}`;
+    if (incomeType === "daily") return `${d._id.day}/${d._id.month}/${d._id.year}`;
+    return "";
+  };
+
   const handleDownloadExcel = () => {
     const dataToExport = counts.incomeByMonth.map(item => ({
-      Mes: `Mes ${item._id}`,
+      Periodo: getLabel(item),
       Ingreso: item.total
     }));
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "IngresosPorMes");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Ingresos");
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `IngresosPorMes.xlsx`);
+    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `IngresosPor${incomeType.charAt(0).toUpperCase() + incomeType.slice(1)}.xlsx`);
   };
 
   return (
@@ -160,6 +168,16 @@ const Dashboard = () => {
               showMonthYearPicker
               className="date-picker"
             />
+          </div>
+
+          {/* Selector de rango */}
+          <div className="income-type-selector" style={{ marginBottom: 16 }}>
+            <label style={{ marginRight: 8 }}>Ver ingresos por: </label>
+            <select value={incomeType} onChange={e => setIncomeType(e.target.value)}>
+              <option value="monthly">Mes</option>
+              <option value="fortnight">Quincena</option>
+              <option value="daily">Día</option>
+            </select>
           </div>
 
           <div className="dashboard-graphs">
@@ -204,7 +222,7 @@ const Dashboard = () => {
             <div className="chart">
               <div className="chart-header">
                 <h4 style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span>Ingresos por mes</span>
+                  <span>Ingresos por {incomeType === 'monthly' ? 'mes' : incomeType === 'fortnight' ? 'quincena' : 'día'}</span>
                   <button className="excel-btn" onClick={handleDownloadExcel}>
                     <FaDownload style={{ marginRight: 6 }} />
                     Descargar Excel
@@ -212,8 +230,10 @@ const Dashboard = () => {
                 </h4>
               </div>
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={counts.incomeByMonth.map(d => ({ month: `Mes ${d._id}`, income: d.total }))}>
-                  <XAxis dataKey="month" />
+                <BarChart data={counts.incomeByMonth.map(d => ({
+                  label: getLabel(d), income: d.total
+                }))}>
+                  <XAxis dataKey="label" />
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="income" fill="#82ca9d" />
