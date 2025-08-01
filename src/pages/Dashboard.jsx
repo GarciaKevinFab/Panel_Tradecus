@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { BASE_URL } from '../utils/config';
 import '../styles/dashboard.css';
-import { FaUser, FaCalendarAlt, FaMapMarkedAlt, FaEnvelope, FaBell, FaDownload } from 'react-icons/fa';
+import { FaUser, FaCalendarAlt, FaMapMarkedAlt, FaEnvelope, FaBell, FaDownload, FaSignOutAlt } from 'react-icons/fa';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
@@ -43,6 +43,7 @@ const Dashboard = () => {
 
   const [reviewStats, setReviewStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   const getToken = () => localStorage.getItem("accessToken");
 
@@ -151,58 +152,79 @@ const Dashboard = () => {
 
   // === DESCARGAS ===
   const handleDownloadBookingsExcel = () => {
-    const dataToExport = bookingStats.map(item => ({
-      Periodo: getBookingLabel(item),
-      Reservas: item.count
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Reservas");
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `ReservasPor${bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}.xlsx`);
+    setDownloading(true);
+    setTimeout(() => { // animación breve
+      const dataToExport = bookingStats.map(item => ({
+        Periodo: getBookingLabel(item),
+        Reservas: item.count
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Reservas");
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `ReservasPor${bookingType.charAt(0).toUpperCase() + bookingType.slice(1)}.xlsx`);
+      setDownloading(false);
+    }, 900);
   };
 
   const handleDownloadIncomeExcel = () => {
-    const dataToExport = counts.incomeByMonth.map(item => ({
-      Periodo: getIncomeLabel(item),
-      Ingreso: item.total
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Ingresos");
-    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `IngresosPor${incomeType.charAt(0).toUpperCase() + incomeType.slice(1)}.xlsx`);
+    setDownloading(true);
+    setTimeout(() => {
+      const dataToExport = counts.incomeByMonth.map(item => ({
+        Periodo: getIncomeLabel(item),
+        Ingreso: item.total
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Ingresos");
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([excelBuffer], { type: "application/octet-stream" }), `IngresosPor${incomeType.charAt(0).toUpperCase() + incomeType.slice(1)}.xlsx`);
+      setDownloading(false);
+    }, 900);
   };
 
-  // === UI ===
+  // Logout
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    window.location.href = "/";
+  };
+
+  // UI ESTADOS VACÍOS
+  const EmptyState = ({ text }) => (
+    <div className="empty-state">
+      <span role="img" aria-label="no-data">📉</span>
+      <p>{text}</p>
+    </div>
+  );
+
   return (
     <div className="dashboard">
-      <h2>
-        <span role="img" aria-label="panel">📊</span> Panel de Control
-      </h2>
-      {loading ? (
-        <div className="loader">Cargando...</div>
-      ) : (
-        <>
-          <div className="dashboard-cards">
-            <div className="card card-reservas">
-              <FaCalendarAlt /> <span>Reservas:</span> <b>{counts.bookings}</b>
-            </div>
-            <div className="card card-usuarios">
-              <FaUser /> <span>Usuarios:</span> <b>{counts.users}</b>
-            </div>
-            <div className="card card-tours">
-              <FaMapMarkedAlt /> <span>Tours:</span> <b>{counts.tours}</b>
-            </div>
-            <div className="card card-suscriptores">
-              <FaBell /> <span>Suscriptores:</span> <b>{counts.subscribers}</b>
-            </div>
-            <div className="card card-mensajes">
-              <FaEnvelope /> <span>Mensajes:</span> <b>{counts.messages}</b>
-            </div>
+      <header className="dashboard-header">
+        <h2>
+          <span role="img" aria-label="panel">📊</span> Bienvenido, Kevin
+        </h2>
+        <button className="logout-btn" onClick={handleLogout} title="Cerrar sesión">
+          <FaSignOutAlt /> Logout
+        </button>
+        <div className="dashboard-filters">
+          <div>
+            <label>Reservas por: </label>
+            <select value={bookingType} onChange={e => setBookingType(e.target.value)}>
+              <option value="monthly">Mes</option>
+              <option value="fortnight">Quincena</option>
+              <option value="daily">Día</option>
+            </select>
           </div>
-
-          <div className="date-filter-bar">
+          <div>
+            <label>Ingresos por: </label>
+            <select value={incomeType} onChange={e => setIncomeType(e.target.value)}>
+              <option value="monthly">Mes</option>
+              <option value="fortnight">Quincena</option>
+              <option value="daily">Día</option>
+            </select>
+          </div>
+          <div>
+            <label>Fecha: </label>
             <DatePicker
               selected={selectedDate}
               onChange={date => setSelectedDate(date)}
@@ -211,92 +233,144 @@ const Dashboard = () => {
               className="date-picker"
             />
           </div>
+        </div>
+      </header>
 
-          {/* === Selector de reservas === */}
-          <div className="booking-type-selector" style={{ marginBottom: 16 }}>
-            <label style={{ marginRight: 8 }}>Ver reservas por: </label>
-            <select value={bookingType} onChange={e => setBookingType(e.target.value)}>
-              <option value="monthly">Mes</option>
-              <option value="fortnight">Quincena</option>
-              <option value="daily">Día</option>
-            </select>
+      {loading ? (
+        <div className="loader">
+          <svg width="42" height="42" viewBox="0 0 40 40">
+            <circle cx="20" cy="20" r="18" stroke="#4e73df" strokeWidth="4" fill="none" opacity=".2" />
+            <circle cx="20" cy="20" r="18" stroke="#4e73df" strokeWidth="4" fill="none" strokeDasharray="90, 150" strokeLinecap="round">
+              <animateTransform attributeName="transform" type="rotate" values="0 20 20;360 20 20" dur="1s" repeatCount="indefinite" />
+            </circle>
+          </svg>
+          <div>Cargando datos...</div>
+        </div>
+      ) : (
+        <>
+          <div className="dashboard-cards">
+            <div className="card card-reservas">
+              <span className="card-icon glass"><FaCalendarAlt /></span>
+              <span>Reservas</span>
+              <b>{counts.bookings}</b>
+            </div>
+            <div className="card card-usuarios">
+              <span className="card-icon glass"><FaUser /></span>
+              <span>Usuarios</span>
+              <b>{counts.users}</b>
+            </div>
+            <div className="card card-tours">
+              <span className="card-icon glass"><FaMapMarkedAlt /></span>
+              <span>Tours</span>
+              <b>{counts.tours}</b>
+            </div>
+            <div className="card card-suscriptores">
+              <span className="card-icon glass"><FaBell /></span>
+              <span>Suscriptores</span>
+              <b>{counts.subscribers}</b>
+            </div>
+            <div className="card card-mensajes">
+              <span className="card-icon glass"><FaEnvelope /></span>
+              <span>Mensajes</span>
+              <b>{counts.messages}</b>
+            </div>
           </div>
 
           <div className="dashboard-graphs">
-
+            {/* CHART 1: RESERVAS */}
             <div className="chart">
-              <div className="chart-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div className="chart-header">
                 <span>Reservas por {bookingType === 'monthly' ? 'mes' : bookingType === 'fortnight' ? 'quincena' : 'día'}</span>
-                <button className="excel-btn" onClick={handleDownloadBookingsExcel}>
-                  <FaDownload style={{ marginRight: 6 }} />
+                <button className="excel-btn" onClick={handleDownloadBookingsExcel} disabled={downloading}>
+                  {downloading ? (
+                    <span className="spinner"></span>
+                  ) : (
+                    <FaDownload style={{ marginRight: 6 }} />
+                  )}
                   Descargar Excel
                 </button>
               </div>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={bookingStats.map(d => ({
-                  label: getBookingLabel(d),
-                  count: d.count
-                }))}>
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
+              {bookingStats.length === 0 ? (
+                <EmptyState text="No hay datos de reservas para este periodo." />
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart
+                    data={bookingStats.map(d => ({
+                      label: getBookingLabel(d),
+                      count: d.count
+                    }))}
+                    isAnimationActive={true}
+                  >
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={3} dot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
+            {/* CHART 2: REVIEWS */}
             <div className="chart">
               <div className="chart-header">
                 <h4>Reviews por calificación</h4>
               </div>
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={reviewStats}
-                    dataKey="count"
-                    nameKey="_id"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label
-                  >
-                    {reviewStats.map((_, index) => (
-                      <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {reviewStats.length === 0 ? (
+                <EmptyState text="No hay reviews disponibles." />
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={reviewStats}
+                      dataKey="count"
+                      nameKey="_id"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label
+                      isAnimationActive={true}
+                    >
+                      {reviewStats.map((_, index) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
-            {/* === Selector de ingresos === */}
-            <div className="income-type-selector" style={{ marginBottom: 16 }}>
-              <label style={{ marginRight: 8 }}>Ver ingresos por: </label>
-              <select value={incomeType} onChange={e => setIncomeType(e.target.value)}>
-                <option value="monthly">Mes</option>
-                <option value="fortnight">Quincena</option>
-                <option value="daily">Día</option>
-              </select>
-            </div>
-
+            {/* CHART 3: INGRESOS */}
             <div className="chart">
-              <div className="chart-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div className="chart-header">
                 <span>Ingresos por {incomeType === 'monthly' ? 'mes' : incomeType === 'fortnight' ? 'quincena' : 'día'}</span>
-                <button className="excel-btn" onClick={handleDownloadIncomeExcel}>
-                  <FaDownload style={{ marginRight: 6 }} />
+                <button className="excel-btn" onClick={handleDownloadIncomeExcel} disabled={downloading}>
+                  {downloading ? (
+                    <span className="spinner"></span>
+                  ) : (
+                    <FaDownload style={{ marginRight: 6 }} />
+                  )}
                   Descargar Excel
                 </button>
               </div>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={counts.incomeByMonth.map(d => ({
-                  label: getIncomeLabel(d), income: d.total
-                }))}>
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="income" fill="#82ca9d" />
-                </BarChart>
-              </ResponsiveContainer>
+              {counts.incomeByMonth.length === 0 ? (
+                <EmptyState text="No hay datos de ingresos para este periodo." />
+              ) : (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart
+                    data={counts.incomeByMonth.map(d => ({
+                      label: getIncomeLabel(d),
+                      income: d.total
+                    }))}
+                    isAnimationActive={true}
+                  >
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="income" fill="#21c36a" radius={[7, 7, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </>
