@@ -137,7 +137,7 @@ const CreateBooking = () => {
     allUserDataValid &&
     /^\d{9}$/.test(booking.phone);
 
-  // LA CLAVE: fuerza a 12:00 antes de enviar al backend
+  // Lógica para ajustar la fecha antes de guardar
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -151,16 +151,28 @@ const CreateBooking = () => {
       return;
     }
 
-    const fixedBookAt = moment(booking.bookAt)
-      .set({ hour: 12, minute: 0, second: 0, millisecond: 0 })
-      .toISOString();
+    const now = moment();
+    let finalBookAt = moment(booking.bookAt);
 
-    // Verifica antes de enviar
-    // console.log("FECHA QUE SE MANDA:", fixedBookAt);
+    // Si el usuario intenta reservar para HOY y ya son más de las 12pm, se ajusta a MAÑANA (misma hora)
+    const isToday = finalBookAt.isSame(now, 'day');
+    const afterNoon = now.hour() >= 12;
+
+    if (isToday && afterNoon) {
+      finalBookAt = now.clone().add(1, "day").set({
+        hour: finalBookAt.hour(),
+        minute: finalBookAt.minute(),
+        second: 0,
+        millisecond: 0
+      });
+      toast.info("Ya no puedes reservar para hoy. Tu reserva será para mañana.");
+    }
+
+    // console.log("FECHA QUE SE MANDA:", finalBookAt.toISOString());
 
     const bookingData = {
       ...booking,
-      bookAt: fixedBookAt,
+      bookAt: finalBookAt.toISOString(),
       userData: userData.filter(
         (item) => item.nombres && item.apellidoPaterno && item.apellidoMaterno
       ),
